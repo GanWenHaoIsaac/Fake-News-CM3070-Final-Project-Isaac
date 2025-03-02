@@ -1,0 +1,1 @@
+# pip install flask transformers scikit-learn joblib tensorflow
