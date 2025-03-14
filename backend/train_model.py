@@ -104,18 +104,18 @@ print("DT: ", classification_report(y_test, dt_pred))
 
 
 
-# # Train Random Forest model
-# rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
-# rf_model.fit(X_train_tfidf, y_train)
+# Train Random Forest model
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train_tfidf, y_train)
 
 # # Evaluate Random Forest model
 # rf_pred = rf_model.predict(X_test_tfidf)
 # print("Random Forest Classification Report:")
 # print(classification_report(y_test, rf_pred))
 
-# # Train SVM model
-# svm_model = SVC(kernel='linear', random_state=42)
-# svm_model.fit(X_train_tfidf, y_train)
+# Train SVM model
+svm_model = SVC(kernel='linear', random_state=42)
+svm_model.fit(X_train_tfidf, y_train)
 
 # # Evaluate SVM model
 # svm_pred = svm_model.predict(X_test_tfidf)
@@ -143,8 +143,8 @@ def manual_testing(news):
 
     print(f"\n\nLR Prediction: {output_label(lr_pred[0])}")
     print(f"DT Prediction: {output_label(dt_pred[0])}")
-    # print(f"RF Prediction: {output_label(rf_pred[0])}")
-    # print(f"SVM Prediction: {output_label(svm_pred[0])}")
+    print(f"RF Prediction: {output_label(rf_pred[0])}")
+    print(f"SVM Prediction: {output_label(svm_pred[0])}")
 
 
 # news = str(input("Enter news: "))
