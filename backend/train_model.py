@@ -15,8 +15,8 @@ from sklearn.svm import SVC
 import string
 
 # Load fake and real news datasets
-fake_news = pd.read_csv('data/Fake.csv')
-real_news = pd.read_csv('data/True.csv')
+fake_news = pd.read_csv('data/fake_cleaned.csv')
+real_news = pd.read_csv('data/true_cleaned.csv')
 
 fake_news.head()
 real_news.head()
@@ -27,16 +27,16 @@ real_news['label'] = 1  # Real news = 1
 fake_news.shape, real_news.shape
 
 #data = pd.concat([fake_news, real_news], ignore_index=True)
-fake_manual_testing = fake_news.tail(10)
-for i in range(23480, 23470, -1):
-    fake_news.drop([i], axis = 0, inplace = True)
+# fake_manual_testing = fake_news.tail(10)
+# real_manual_testing = real_news.tail(10)
+# for i in range(21416, 21406, -1):
+#     real_news.drop([i], axis = 0, inplace = True)
+# fake_news.reset_index(drop=True, inplace=True)
+# real_news.reset_index(drop=True, inplace=True)
 
-real_manual_testing = real_news.tail(10)
-for i in range(21416, 21406, -1):
-    real_news.drop([i], axis = 0, inplace = True)
 
-fake_manual_testing['label'] = 0
-real_manual_testing['label'] = 1
+# fake_manual_testing['label'] = 0
+# real_manual_testing['label'] = 1
 
 merge_news = pd.concat([fake_news, real_news], axis = 0)
 merge_news.head(10)
@@ -160,6 +160,14 @@ print("LR model saved successfully.")
 
 print("Saving vectorizer to models/decision_tree.pkl...")
 joblib.dump(DT, "models/decision_tree.pkl")
+print("DT model saved successfully.")
+
+print("Saving model to models/logistic_regression.pkl...")
+joblib.dump(rf_model, "models/random_forest.pkl")
+print("LR model saved successfully.")
+
+print("Saving vectorizer to models/decision_tree.pkl...")
+joblib.dump(svm_model, "models/svm_model.pkl")
 print("DT model saved successfully.")
 
 print("Saving TF-IDF vectorizer to models/tfidf_vectorizer.pkl...")
