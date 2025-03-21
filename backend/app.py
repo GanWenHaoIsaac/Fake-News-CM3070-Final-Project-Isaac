@@ -1,23 +1,29 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS  # Import CORS
+from flask import Flask, request, jsonify, render_template_string
+from flask_cors import CORS
 import joblib
 import re
 import nltk
 import string
+import shap
 
 # Load traditional ML model
 lr_model = joblib.load("models/logistic_regression.pkl")
 tfidf_vectorizer = joblib.load("models/tfidf_vectorizer.pkl")
+decision_tree_model = joblib.load("models/decision_tree.pkl")
+svm_model = joblib.load("models/svm_model.pkl")
 
 # Preprocess text function
 nltk.download("stopwords")
 stop_words = set(nltk.corpus.stopwords.words("english"))
+# Initialize SHAP explainer
+#explainer = shap.Explainer(lr_model, tfidf_vectorizer.transform)
+import shap
 
-# def p_text(text):
-#     text = re.sub(r'\W', ' ', text)
-#     text = text.lower()
-#     text = re.sub(r'\s+', ' ', text)
-#     return ' '.join([word for word in text.split() if word not in stop_words])
+masker = shap.maskers.Independent(tfidf_vectorizer.transform)
+explainer = shap.LinearExplainer(lr_model, masker)
+
+#explainer = shap.LinearExplainer(lr_model, tfidf_vectorizer, feature_perturbation="interventional")
+
 
 def preprocess_text(text):
     text = text.lower()
@@ -30,96 +36,102 @@ def preprocess_text(text):
     text = re.sub(r'\w*\d\w*', '', text)
     return text
 
-
 app = Flask(__name__)
-##CORS(app)
 CORS(app, origins=["http://localhost:5173"], methods=["POST"], allow_headers=["Content-Type"])
+
+# HTML page for user input
+HTML_FORM = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fake News Detector</title>
+    <script>
+        function showExplanation() {
+            document.getElementById('explanation').style.display = 'block';
+        }
+    </script>
+</head>
+<body>
+    <h2>Fake News Detector</h2>
+    <form action="/predict" method="post">
+        <textarea name="text" rows="5" cols="50" placeholder="Enter news article..."></textarea><br><br>
+        <button type="submit">Check</button>
+    </form>
+    {% if prediction %}
+    <h3>Prediction: {{ prediction }}</h3>
+    <button onclick="showExplanation()">Why?</button>
+    <div id="explanation" style="display: none;">
+        <h4>Explanation:</h4>
+        <p>{{ explanation }}</p>
+    </div>
+    {% endif %}
+</body>
+</html>
+"""
 
 @app.route("/")
 def home():
-    return "Fake News Detection API is running!"
+    return render_template_string(HTML_FORM)
 
-@app.route('/predict', methods=['POST'])
+@app.route("/predict", methods=["GET", "POST"])
 def predict():
-    if request.method == 'POST':
-        try:
-            # Get the JSON data from the request
-            data = request.get_json(force=True)
-            
-            # Extract the text from the JSON data
-            text = data.get('text', '')
-            
-            if not text:
-                return jsonify({'error': 'Text is required'}), 400
-            
-            # Preprocess the text
-            processed_text = preprocess_text(text)
-            
-            # Vectorize the text
-            text_vector = tfidf_vectorizer.transform([processed_text])
-            
-            # Make a prediction
-            prediction = lr_model.predict(text_vector)
-            
-            # Return the prediction as a JSON response
-            return jsonify({'prediction': int(prediction[0])})
-        except Exception as e:
-            # Log the error
-            print(f"Error during prediction: {str(e)}")
-            return jsonify({'error': 'Internal Server Error'}), 500
-    else:
-        # Handle GET requests (e.g., return a message or redirect)
-        return jsonify({'message': 'Send a POST request with text to get a prediction.'})
-if __name__ == '__main__':
+    if request.method == "GET":
+        return jsonify({"message": "Use POST with JSON data to get a prediction."})
+
+    try:
+        text = ""
+        if request.content_type == "application/json":
+            text = request.get_json().get("text", "")
+        else:
+            text = request.form.get("text", "")
+
+        if not text:
+            return render_template_string(HTML_FORM, prediction="Please enter text.")
+
+        # Preprocess the text
+        processed_text = preprocess_text(text)
+
+        # Vectorize the text
+        text_vector = tfidf_vectorizer.transform([processed_text])
+
+        # Make a prediction
+        prediction = lr_model.predict(text_vector)
+        result = "Fake" if prediction[0] == 1 else "Real"
+
+        # Get SHAP explanation
+        shap_values = explainer(text_vector)[0].values
+        top_features = np.argsort(-np.abs(shap_values))[:3]
+        feature_names = tfidf_vectorizer.get_feature_names_out()
+        explanation = ", ".join(feature_names[i] for i in top_features)
+
+        return render_template_string(HTML_FORM, prediction=result, explanation=explanation)
+    except Exception as e:
+        print(f"Error during prediction: {str(e)}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+@app.route("/explain", methods=["POST"])
+def explain():
+    try:
+        data = request.get_json(force=True)
+        text = data.get("text", "")
+
+        if not text:
+            return jsonify({"error": "Text is required"}), 400
+
+        # Preprocess the text
+        processed_text = preprocess_text(text)
+        text_vector = tfidf_vectorizer.transform([processed_text])
+
+        # Compute SHAP values
+        shap_values = explainer(text_vector)[0].values
+        top_features = np.argsort(-np.abs(shap_values))[:3]
+        feature_names = tfidf_vectorizer.get_feature_names_out()
+        explanation = {feature_names[i]: shap_values[i] for i in top_features}
+
+        return jsonify({"explanation": explanation})
+    except Exception as e:
+        print(f"Error generating explanation: {str(e)}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+if __name__ == "__main__":
     app.run(debug=True)
-
-
-    
-# from flask import Flask, request, jsonify
-# import joblib
-# import pandas as pd
-# import nltk
-# import re
-# from transformers import BertTokenizer, TFBertForSequenceClassification
-# import tensorflow as tf
-
-# # Load traditional ML model
-# ml_model = joblib.load("models/logistic_regression.pkl")
-# tfidf_vectorizer = joblib.load("models/tfidf_vectorizer.pkl")
-
-# # Load BERT model
-# tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-# # bert_model = TFBertForSequenceClassification.from_pretrained("models/bert_model/")
-
-# # Preprocess text function
-# nltk.download("stopwords")
-# stop_words = set(nltk.corpus.stopwords.words("english"))
-
-# def preprocess_text(text):
-#     text = re.sub(r'\W', ' ', text)
-#     text = text.lower()
-#     text = re.sub(r'\s+', ' ', text)
-#     return ' '.join([word for word in text.split() if word not in stop_words])
-
-# app = Flask(__name__)
-
-# @app.route("/predict", methods=["POST"])
-# def predict():
-#     data = request.get_json()
-#     text = data.get("text", "")
-#     model_type = data.get("model", "ml")  # Default to ML
-
-#     processed_text = preprocess_text(text)
-
-#     if model_type == "ml":
-#         vectorized_text = tfidf_vectorizer.transform([processed_text])
-#         prediction = ml_model.predict(vectorized_text)[0]
-#     elif model_type == "bert":
-#         tokens = tokenizer(processed_text, return_tensors="tf", max_length=512, truncation=True, padding="max_length")
-#         logits = bert_model(tokens["input_ids"]).logits
-#         prediction = tf.argmax(logits, axis=1).numpy()[0]
-
-#     return jsonify({"prediction": "Real" if prediction == 1 else "Fake"})
-
-# if __name__ == "__main__":
-#     app.run(debug=True)
