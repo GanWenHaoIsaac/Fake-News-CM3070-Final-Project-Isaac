@@ -6,35 +6,23 @@ import nltk
 import string
 import shap
 
+# import sys
+# print(sys.executable)  # Should show the conda env path
+# print(sys.path)        # Check if unwanted paths are prioritized
+
 # Load traditional ML model
-lr_model = joblib.load("models/logistic_regression.pkl")
-tfidf_vectorizer = joblib.load("models/tfidf_vectorizer.pkl")
-decision_tree_model = joblib.load("models/decision_tree.pkl")
-svm_model = joblib.load("models/svm_model.pkl")
+tfidf_vectorizer = joblib.load("models/tfidf_vectorizer_Notebook.pkl")
+
+LR = joblib.load("models/logistic_regression_comp_4.pkl")
+NB = joblib.load("models/naive_bayes_comp_4.pkl")
+RF = joblib.load("models/random_forest_comp_2.pkl")
+SVM = joblib.load("models/svm_model_comp_1.pkl")
+DT = joblib.load("models/decision_tree.pkl")
 
 # Preprocess text function
 nltk.download("stopwords")
 stop_words = set(nltk.corpus.stopwords.words("english"))
-# Initialize SHAP explainer
-#explainer = shap.Explainer(lr_model, tfidf_vectorizer.transform)
-import shap
 
-masker = shap.maskers.Independent(tfidf_vectorizer.transform)
-explainer = shap.LinearExplainer(lr_model, masker)
-
-#explainer = shap.LinearExplainer(lr_model, tfidf_vectorizer, feature_perturbation="interventional")
-
-
-def preprocess_text(text):
-    text = text.lower()
-    text = re.sub(r'\[.*?\]', '', text)
-    text = re.sub(r"\W", " ", text)
-    text = re.sub(r'https?:\/\/\S+|www\.\S+', '', text)
-    text = re.sub(r'<.*?>+', '', text)
-    text = re.sub(r'[%s]' % re.escape(string.punctuation), '', text)
-    text = re.sub(r'\n', '', text)
-    text = re.sub(r'\w*\d\w*', '', text)
-    return text
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"], methods=["POST"], allow_headers=["Content-Type"])
@@ -45,25 +33,31 @@ HTML_FORM = """
 <html>
 <head>
     <title>Fake News Detector</title>
-    <script>
-        function showExplanation() {
-            document.getElementById('explanation').style.display = 'block';
+    <style>
+        .confidence {
+            color: #666;
+            font-style: italic;
+            margin-top: -15px;
         }
-    </script>
+    </style>
 </head>
 <body>
     <h2>Fake News Detector</h2>
     <form action="/predict" method="post">
-        <textarea name="text" rows="5" cols="50" placeholder="Enter news article..."></textarea><br><br>
+        <textarea name="text" rows="5" cols="50" placeholder="Enter news article...">{% if text %}{{ text }}{% endif %}</textarea><br><br>
+        <label for="model">Choose a model:</label>
+        <select name="model" id="model">
+            <option value="lr" {% if model_name == 'lr' %}selected{% endif %}>Logistic Regression</option>
+            <option value="dt" {% if model_name == 'dt' %}selected{% endif %}>Decision Tree</option>
+            <option value="svm" {% if model_name == 'svm' %}selected{% endif %}>SVM</option>
+            <option value="nb" {% if model_name == 'nb' %}selected{% endif %}>Naive Bayes</option>
+            <option value="rf"{% if model_name == 'rf' %}selected{% endif %}>Random Forest</option>
+        </select><br><br>
         <button type="submit">Check</button>
     </form>
     {% if prediction %}
     <h3>Prediction: {{ prediction }}</h3>
-    <button onclick="showExplanation()">Why?</button>
-    <div id="explanation" style="display: none;">
-        <h4>Explanation:</h4>
-        <p>{{ explanation }}</p>
-    </div>
+    <p class="confidence">Confidence: {{ confidence }}</p>
     {% endif %}
 </body>
 </html>
@@ -80,58 +74,64 @@ def predict():
 
     try:
         text = ""
+        model_name = "lr"
         if request.content_type == "application/json":
-            text = request.get_json().get("text", "")
+            data = request.get_json()
+            text = data.get("text", "")
+            model_name = data.get("model", "lr")  # Default to Logistic Regression
+        
         else:
             text = request.form.get("text", "")
+            model_name = request.form.get("model", "lr")  # Default to Logistic Regression
 
         if not text:
-            return render_template_string(HTML_FORM, prediction="Please enter text.")
+            return render_template_string(HTML_FORM, 
+                                          text=text, 
+                                          model_name=model_name, 
+                                          prediction="Please enter text.")
 
         # Preprocess the text
-        processed_text = preprocess_text(text)
+        #processed_text = preprocess_text(text)
 
         # Vectorize the text
-        text_vector = tfidf_vectorizer.transform([processed_text])
+        text_vector = tfidf_vectorizer.transform([text])
+        print(f"Received text: {text}")
+        #print(f"Processed text: {processed_text}")
+
+
+        if model_name == "lr":
+            model = LR
+        elif model_name == "nb":
+            model = NB
+        elif model_name == "dt":
+            model = DT
+        elif model_name == "svm":
+            model = SVM
+        elif model_name == "rf":
+            model = RF
+        else:
+            return render_template_string(HTML_FORM, prediction="Invalid model selected.")
 
         # Make a prediction
-        prediction = lr_model.predict(text_vector)
-        result = "Fake" if prediction[0] == 1 else "Real"
+        prediction = model.predict(text_vector)[0]
+        proba = model.predict_proba(text_vector)[0]
+        confidence = max(proba) * 100
+        
+        result = "Fake" if prediction == 0 else "Real"
+        print(f"Model: {model}")
+        print(f"Prediction (Flask): {prediction}")
 
-        # Get SHAP explanation
-        shap_values = explainer(text_vector)[0].values
-        top_features = np.argsort(-np.abs(shap_values))[:3]
-        feature_names = tfidf_vectorizer.get_feature_names_out()
-        explanation = ", ".join(feature_names[i] for i in top_features)
-
-        return render_template_string(HTML_FORM, prediction=result, explanation=explanation)
+        return render_template_string(HTML_FORM, 
+                                   text=text,
+                                   model_name=model_name,
+                                   prediction=result,
+                                   confidence=f"{confidence:.2f}%")
     except Exception as e:
         print(f"Error during prediction: {str(e)}")
-        return jsonify({"error": "Internal Server Error"}), 500
-
-@app.route("/explain", methods=["POST"])
-def explain():
-    try:
-        data = request.get_json(force=True)
-        text = data.get("text", "")
-
-        if not text:
-            return jsonify({"error": "Text is required"}), 400
-
-        # Preprocess the text
-        processed_text = preprocess_text(text)
-        text_vector = tfidf_vectorizer.transform([processed_text])
-
-        # Compute SHAP values
-        shap_values = explainer(text_vector)[0].values
-        top_features = np.argsort(-np.abs(shap_values))[:3]
-        feature_names = tfidf_vectorizer.get_feature_names_out()
-        explanation = {feature_names[i]: shap_values[i] for i in top_features}
-
-        return jsonify({"explanation": explanation})
-    except Exception as e:
-        print(f"Error generating explanation: {str(e)}")
-        return jsonify({"error": "Internal Server Error"}), 500
-
+        return render_template_string(HTML_FORM,
+                                   text=text,
+                                   model_name=model_name,
+                                   prediction="Error occurred during prediction")
+        
 if __name__ == "__main__":
     app.run(debug=True)
