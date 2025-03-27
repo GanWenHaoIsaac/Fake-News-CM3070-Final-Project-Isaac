@@ -43,29 +43,6 @@ app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"], methods=["POST"], allow_headers=["Content-Type"])
 import time
 
-# Create prediction function
-# def bert_predict(text, max_length=256):
-#     inputs = bert_tokenizer(
-#         text, 
-#         return_tensors="tf",                         
-#         max_length=max_length, 
-#         padding='max_length', 
-#         truncation=True,
-#         return_token_type_ids=False
-#     )
-
-#     outputs = BERT(inputs)
-#     logits = outputs.logits.numpy()[0][0]  # Convert logits to probability
-
-#     # Convert to probability using sigmoid
-#     probability = 1 / (1 + np.exp(-logits))  # Manual sigmoid
-        
-#         # Determine label and confidence
-#     if probability < 0.5:
-#         return "Fake", f"{(1 - probability)*100:.2f}%"
-#     else:
-#         return "Real", f"{probability*100:.2f}%"
-
 
 def bert_predict(text, model):
     """Handle BERT model predictions consistently"""
@@ -129,6 +106,23 @@ HTML_FORM = """
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        #loading {
+            display: none;
+            margin: 20px 0;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -155,10 +149,27 @@ HTML_FORM = """
         <div class="spinner"></div>
     </div>
     
+    
+    <div id="loading">
+        <p>Analyzing article... Please wait...</p>
+        <div class="spinner"></div>
+    </div>
+    
     {% if prediction %}
     <h3>Prediction: {{ prediction }}</h3>
     <p class="confidence">Confidence: {{ confidence }}</p>
     {% endif %}
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', function() {
+            document.getElementById('loading').style.display = 'block';
+        });
+        
+        // Hide loader if prediction results are shown
+        if(window.location.href.includes('/predict')) {
+            document.getElementById('loading').style.display = 'none';
+        }
+    </script>
 
     <script>
         document.getElementById('prediction-form').addEventListener('submit', function() {
@@ -309,6 +320,7 @@ def predict():
                                    text=text,
                                    model_name=model_name,
                                    prediction=result,
+                                   confidence=confidence_str)
                                    confidence=confidence_str)
     except Exception as e:
         print(f"Error during prediction: {str(e)}")
