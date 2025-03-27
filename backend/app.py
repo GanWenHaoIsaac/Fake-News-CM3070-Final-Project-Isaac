@@ -321,7 +321,6 @@ def predict():
                                    model_name=model_name,
                                    prediction=result,
                                    confidence=confidence_str)
-                                   confidence=confidence_str)
     except Exception as e:
         print(f"Error during prediction: {str(e)}")
         return render_template_string(HTML_FORM,
