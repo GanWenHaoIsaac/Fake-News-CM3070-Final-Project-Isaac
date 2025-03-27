@@ -1,3 +1,11 @@
+# Ensure this system is ran in accordance with the Virtual Environments settings listed in the .env file and requirements.txt
+This code should be run on Python 3.10.13
+
+
+
+
+
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
