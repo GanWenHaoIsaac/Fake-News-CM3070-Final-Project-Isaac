@@ -3,18 +3,17 @@ This code should be run on Python 3.10.13
 
 
 
+How to run both backend and front end applications:
+- Backend:  
+> cd backend
+> python app.py (make sure this is run in Python 3.10.13 [anaconda3\envs\py310env\python.exe])
+
+- Frontend: 
+> cd .. (return to "CM3070-FakeNews-Vite-App\my-fake-news-app")
+> npm run dev
 
 
+- How to run backend tests:
+> cd backend
+> pytest tests/test-app.py 
 
-# React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

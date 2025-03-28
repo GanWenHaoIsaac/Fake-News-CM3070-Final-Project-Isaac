@@ -33,9 +33,11 @@ from tensorflow.keras.layers import Input
 
 LSTM = load_model("models/lstm_fixed.keras")
 CNN_LSTM = load_model("models/cnn_lstm_fixed.keras")
+
 BERT = load_model("models/bert_99.keras",
                     custom_objects={'TFBertForSequenceClassification': TFBertForSequenceClassification}, 
                     compile=False)
+
 BERT_LSTM = load_model("models/bert_LSTM_test_99.keras",
                         custom_objects={'TFBertModel': TFBertModel})
 
@@ -156,7 +158,8 @@ HTML_FORM = """
     </div>
     
     {% if prediction %}
-    <h3>Prediction: {{ prediction }}</h3>
+    <h3>Model Used: {{ model_name|upper }}</h3>
+    <h3> Prediction: {{ prediction }}</h3>
     <p class="confidence">Confidence: {{ confidence }}</p>
     {% endif %}
 
@@ -253,8 +256,7 @@ def predict():
             
             result = "Fake" if prediction < 0.5 else "Real"
             confidence = f"{max(prediction, 1-prediction)*100:.2f}%"
-            #print(f"Model: {model_name}")
-            #print(f"Prediction (Flask): {result}")
+
 
         elif model_name in ["bert", "bert-lstm"]:
             print(f"\nProcessing with {model_name.upper()} model...")
@@ -281,11 +283,12 @@ def predict():
                     confidence = f"{probability*100:.2f}%"
                     
             except Exception as e:
-                print(f"BERT Error: {str(e)}")
+                predictionE=f"BERT Error: {str(e)}"
+                print(predictionE)
                 return render_template_string(HTML_FORM,
                                           text=text,
                                           model_name=model_name,
-                                          prediction=f"BERT Error: {str(e)}")
+                                          prediction=predictionE)
 
         else:
             # Traditional ML models
