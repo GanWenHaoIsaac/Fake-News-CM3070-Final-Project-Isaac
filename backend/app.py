@@ -40,8 +40,11 @@ def bert_predict(text, model):
         print(f"BERT Prediction Error: {str(e)}")
         return None
 
-@app.route("/predict", methods=["POST"])
+@app.route("/predict", methods=["GET", "POST"])
 def predict():
+    if request.method == "GET":
+        return jsonify({"message": "Use POST with JSON data to get a prediction."})
+    
     try:
         data = request.get_json()
         text = data.get("text", "")

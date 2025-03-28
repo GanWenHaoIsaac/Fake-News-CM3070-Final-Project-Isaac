@@ -160,7 +160,7 @@ HTML_FORM = """
     </div>
     
     {% if prediction %}
-    <h3>Model Used: {{ model_name|upper }}</h3>
+    <h3>Model: {{ model_name|upper }}</h3>
     <h3> Prediction: {{ prediction }}</h3>
     <p class="confidence">Confidence: {{ confidence }}</p>
     {% endif %}
