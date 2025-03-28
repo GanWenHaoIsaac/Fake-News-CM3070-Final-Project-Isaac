@@ -1,335 +1,80 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import joblib
-import re
-import nltk
-import string
-import shap
 import pickle
 import numpy as np
-# import sys
-# print(sys.executable)  # Should show the conda env path
-# print(sys.path)        # Check if unwanted paths are prioritized
-
-# Load traditional ML model
-tfidf_vectorizer = joblib.load("models/preprocessing_methods/tfidf_vectorizer_Notebook.pkl")
-with open('models/preprocessing_methods/LSTMs-tokenizer.pkl', 'rb') as handle:
-    lstm_tokenizer = pickle.load(handle)
-
-with open('models/preprocessing_methods/BERTs-tokenizer.pkl', 'rb') as handle:
-    bert_tokenizer = pickle.load(handle)
-
-LR = joblib.load("models/logistic_regression_comp_4.pkl")
-NB = joblib.load("models/naive_bayes_comp_4.pkl")
-RF = joblib.load("models/random_forest_comp_2.pkl")
-SVM = joblib.load("models/svm_model_comp_1.pkl")
-DT = joblib.load("models/decision_tree.pkl")
-
-import tensorflow as tf
 from transformers import BertTokenizer, TFBertModel, TFBertForSequenceClassification
-from tensorflow.keras.models import load_model, Model
+import tensorflow as tf
+from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.layers import Input
 
-LSTM = load_model("models/lstm_fixed.keras")
-CNN_LSTM = load_model("models/cnn_lstm_fixed.keras")
-
-BERT = load_model("models/bert_99.keras",
-                    custom_objects={'TFBertForSequenceClassification': TFBertForSequenceClassification}, 
-                    compile=False)
-
-BERT_LSTM = load_model("models/bert_LSTM_test_99.keras",
-                        custom_objects={'TFBertModel': TFBertModel})
-
+# Initialize Flask app
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"], methods=["POST"], allow_headers=["Content-Type"])
-import time
+CORS(app)
 
+# Load Models
+tfidf_vectorizer = joblib.load("models/preprocessing_methods/tfidf_vectorizer_Notebook.pkl")
+lstm_tokenizer = pickle.load(open('models/preprocessing_methods/LSTMs-tokenizer.pkl', 'rb'))
+bert_tokenizer = pickle.load(open('models/preprocessing_methods/BERTs-tokenizer.pkl', 'rb'))
+
+models = {
+    "lr": joblib.load("models/logistic_regression_comp_4.pkl"),
+    "nb": joblib.load("models/naive_bayes_comp_4.pkl"),
+    "rf": joblib.load("models/random_forest_comp_2.pkl"),
+    "svm": joblib.load("models/svm_model_comp_1.pkl"),
+    "dt": joblib.load("models/decision_tree.pkl"),
+    "lstm": load_model("models/lstm_fixed.keras", compile=False),
+    "cnn-lstm": load_model("models/cnn_lstm_fixed.keras", compile=False),
+    "bert": load_model("models/bert_redo.keras", custom_objects={'TFBertForSequenceClassification': TFBertForSequenceClassification}, compile=False),
+    "bert-lstm": load_model("models/bert_LSTM_test_99.keras", custom_objects={'TFBertModel': TFBertModel}, compile=False)
+}
 
 def bert_predict(text, model):
-    """Handle BERT model predictions consistently"""
     try:
-        # Tokenize input
-        inputs = bert_tokenizer(
-            text,
-            return_tensors="tf",
-            max_length=256,
-            padding='max_length',
-            truncation=True,
-            return_token_type_ids=False
-        )
-        
-        # Get raw outputs
+        inputs = bert_tokenizer(text, return_tensors="tf", max_length=256, padding='max_length', truncation=True, return_token_type_ids=False)
         outputs = model(inputs)
-        
-        # Handle different output formats
-        if hasattr(outputs, 'logits'):  # Standard BERT output
-            logits = outputs.logits.numpy()[0][0]
-        elif isinstance(outputs, (np.ndarray, tf.Tensor)):  # Some custom models
-            logits = outputs[0][0] if isinstance(outputs, np.ndarray) else outputs.numpy()[0][0]
-        else:
-            raise ValueError("Unexpected model output format")
-        
-        # Convert to probability
-        probability = 1 / (1 + np.exp(-logits))
+        logits = outputs.logits.numpy()[0][0] if hasattr(outputs, 'logits') else outputs.numpy()[0][0]
+        probability = 1 / (1 + np.exp(-logits))  # Apply sigmoid
         return probability
-        
     except Exception as e:
         print(f"BERT Prediction Error: {str(e)}")
-        raise
+        return None
 
-
-# HTML page for user input
-HTML_FORM = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Fake News Detector</title>
-    <style>
-        .confidence {
-            color: #666;
-            font-style: italic;
-            margin-top: -15px;
-        }
-        #loading {
-            display: none;
-            margin: 20px 0;
-        }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border-left-color: #09f;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #loading {
-            display: none;
-            margin: 20px 0;
-        }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border-left-color: #09f;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
-    <h2>Fake News Detector</h2>
-    <form action="/predict" method="post" id="prediction-form">
-        <textarea name="text" rows="5" cols="50" placeholder="Enter news article...">{% if text %}{{ text }}{% endif %}</textarea><br><br>
-        <label for="model">Choose a fake news detection model:</label>
-        <select name="model" id="model">
-            <option value="lr" {% if model_name == 'lr' %}selected{% endif %}>Logistic Regression</option>
-            <option value="dt" {% if model_name == 'dt' %}selected{% endif %}>Decision Tree</option>
-            <option value="svm" {% if model_name == 'svm' %}selected{% endif %}>SVM</option>
-            <option value="nb" {% if model_name == 'nb' %}selected{% endif %}>Naive Bayes</option>
-            <option value="rf"{% if model_name == 'rf' %}selected{% endif %}>Random Forest</option>
-            <option value="lstm"{% if model_name == 'lstm' %}selected{% endif %}>LSTM (Long Short-Term Memory)</option>
-            <option value="cnn-lstm"{% if model_name == 'cnn-lstm' %}selected{% endif %}>CNN+LSTM</option>
-            <option value="bert"{% if model_name == 'bert' %}selected{% endif %}>BERT</option>
-            <option value="bert-lstm"{% if model_name == 'bert-lstm' %}selected{% endif %}>BERT+LSTM</option>
-        </select><br><br>
-        <button type="submit">Check</button>
-    </form>
-    
-    <div id="loading">
-        <p>Analyzing article... Please wait...</p>
-        <div class="spinner"></div>
-    </div>
-    
-    
-    <div id="loading">
-        <p>Analyzing article... Please wait...</p>
-        <div class="spinner"></div>
-    </div>
-    
-    {% if prediction %}
-    <h3>Model Used: {{ model_name|upper }}</h3>
-    <h3> Prediction: {{ prediction }}</h3>
-    <p class="confidence">Confidence: {{ confidence }}</p>
-    {% endif %}
-
-    <script>
-        document.getElementById('prediction-form').addEventListener('submit', function() {
-            document.getElementById('loading').style.display = 'block';
-        });
-        
-        // Hide loader if prediction results are shown
-        if(window.location.href.includes('/predict')) {
-            document.getElementById('loading').style.display = 'none';
-        }
-    </script>
-
-    <script>
-        document.getElementById('prediction-form').addEventListener('submit', function() {
-            document.getElementById('loading').style.display = 'block';
-        });
-        
-        // Hide loader if prediction results are shown
-        if(window.location.href.includes('/predict')) {
-            document.getElementById('loading').style.display = 'none';
-        }
-    </script>
-</body>
-</html>
-"""
-
-@app.route("/")
-def home():
-    return render_template_string(HTML_FORM)
-
-@app.route("/predict", methods=["GET", "POST"])
+@app.route("/predict", methods=["POST"])
 def predict():
-    if request.method == "GET":
-        return jsonify({"message": "Use POST with JSON data to get a prediction."})
-
     try:
-        text = ""
-        model_name = "lr"
-        if request.content_type == "application/json":
-            data = request.get_json()
-            text = data.get("text", "")
-            model_name = data.get("model", "lr")  # Default to Logistic Regression
-        
-        else:
-            text = request.form.get("text", "")
-            model_name = request.form.get("model", "lr")  # Default to Logistic Regression
+        data = request.get_json()
+        text = data.get("text", "")
+        model_name = data.get("model", "lr").lower()
 
         if not text:
-            return render_template_string(HTML_FORM, 
-                                          text=text, 
-                                          model_name=model_name, 
-                                          prediction="Please enter text.")
+            return jsonify({"error": "No text provided."}), 400
 
-        
-        # time.sleep(0.5)
-        # raw_pred = None
-        # result = ""
-        # confidence = "0%"
+        if model_name not in models:
+            return jsonify({"error": "Invalid model selected."}), 400
 
-        # Deep learning models (LSTM/CNN-LSTM)
+        # Prediction logic
+        model = models[model_name]
         if model_name in ["lstm", "cnn-lstm"]:
-            print(f"\nProcessing with {model_name.upper()} model...")  # Debug
             sequence = lstm_tokenizer.texts_to_sequences([text])
-            if not sequence or not sequence[0]:
-                print("Empty sequence after tokenization!")
-                return render_template_string(HTML_FORM,
-                                              text=text,
-                                              model_name=model_name,
-                                              prediction="Error: Text couldn't be processed")
-
             padded_sequence = pad_sequences(sequence, maxlen=200, padding='post', truncating='post')
-            if model_name == "lstm":
-                raw_pred = LSTM.predict(padded_sequence)
-            elif model_name == "cnn-lstm":
-                if CNN_LSTM is None:
-                    print("Error: CNN_LSTM model is not loaded!")
-                    return render_template_string(HTML_FORM, text=text, model_name=model_name, prediction="Error: Model not available")
-                raw_pred = CNN_LSTM.predict(padded_sequence)
-            else:
-                print(f"Error: Unknown model '{model_name}'")
-                return render_template_string(HTML_FORM, text=text, model_name=model_name, prediction="Error: Invalid model name")
-                
-                
-            print(f"Raw model output: {raw_pred}")  # Debug
-                
-            # Extract and validate prediction
-            prediction = raw_pred[0][0]
-            print(f"Final prediction value: {prediction}")  # Debug
-                
-            # if not (0 <= prediction <= 1):
-            #     raise ValueError(f"Prediction {prediction} out of [0,1] range")
-            
-            result = "Fake" if prediction < 0.5 else "Real"
-            confidence = f"{max(prediction, 1-prediction)*100:.2f}%"
-
-
+            probability = model.predict(padded_sequence)[0][0]
         elif model_name in ["bert", "bert-lstm"]:
-            print(f"\nProcessing with {model_name.upper()} model...")
-            try:
-
-                tf.keras.backend.clear_session()
-                # if model_name == "bert":
-                #     outputs = BERT(inputs)
-                # else:  # bert-lstm
-                #     outputs = BERT_LSTM(inputs)
-                model = BERT if model_name == "bert" else BERT_LSTM
-
-                # Convert logits to probability
-                #logits = outputs.logits.numpy()[0][0]
-                #probability = 1 / (1 + np.exp(-logits))  # Sigmoid
- 
-                probability = bert_predict(text, model)
-                # Determine result and confidence
-                if probability < 0.5:
-                    result = "Fake"
-                    confidence = f"{(1 - probability)*100:.2f}%"
-                else:
-                    result = "Real"
-                    confidence = f"{probability*100:.2f}%"
-                    
-            except Exception as e:
-                predictionE=f"BERT Error: {str(e)}"
-                print(predictionE)
-                return render_template_string(HTML_FORM,
-                                          text=text,
-                                          model_name=model_name,
-                                          prediction=predictionE)
-
-        else:
-            # Traditional ML models
-            if model_name == "lr":
-                model = LR
-            elif model_name == "nb":
-                model = NB
-            elif model_name == "dt":
-                model = DT
-            elif model_name == "svm":
-                model = SVM
-            elif model_name == "rf":
-                model = RF
-            else:
-                return render_template_string(HTML_FORM, prediction="Invalid model selected.") # Make a prediction
-            
+            probability = bert_predict(text, model)
+            if probability is None:
+                return jsonify({"error": "BERT model prediction failed."}), 500
+        else:  # Traditional ML models
             text_vector = tfidf_vectorizer.transform([text])
-            prediction = model.predict(text_vector)[0]
-            proba = model.predict_proba(text_vector)[0]
-            confidence = max(proba) * 100
-            result = "Fake" if prediction == 0 else "Real"
-            # print(f"Model: {model}")
-            # print(f"Prediction (Flask): {prediction}")
+            probability = max(model.predict_proba(text_vector)[0])
 
-        
-        if isinstance(confidence, float):
-            confidence_str = f"{confidence:.2f}%"
-        else:
-            confidence_str = confidence 
+        result = "Real" if probability >= 0.5 else "Fake"
+        confidence = f"{probability * 100:.2f}%"
 
-        return render_template_string(HTML_FORM, 
-                                   text=text,
-                                   model_name=model_name,
-                                   prediction=result,
-                                   confidence=confidence_str)
+        return jsonify({"model": model_name, "prediction": result, "confidence": confidence})
+    
     except Exception as e:
-        print(f"Error during prediction: {str(e)}")
-        return render_template_string(HTML_FORM,
-                                   text=text,
-                                   model_name=model_name,
-                                   prediction="Error occurred during prediction")
-        
+        print(f"Prediction Error: {str(e)}")
+        return jsonify({"error": "An error occurred during prediction."}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)
