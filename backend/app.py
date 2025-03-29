@@ -7,6 +7,7 @@ from transformers import BertTokenizer, TFBertModel, TFBertForSequenceClassifica
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+from collections import deque
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -29,6 +30,9 @@ models = {
     "bert-lstm": load_model("models/bert_LSTM_test_99.keras", custom_objects={'TFBertModel': TFBertModel}, compile=False),
     "bigru": load_model("models/bigru_fake_news_redo.keras", compile=False)
 }
+
+# Store last 5 predictions
+history = deque(maxlen=5)
 
 def bert_predict(text, model):
     try:
@@ -78,11 +82,15 @@ def predict():
             probability = model.predict_proba(text_vector)[0][1]
 
         result = "Real" if probability >= 0.5 else "Fake"
-        #confidence = f"{probability * 100:.2f}%"
-        if result == "Fake":
-            confidence = f"{(1 - probability) * 100:.2f}%"
-        else:
-            confidence = f"{probability * 100:.2f}%"
+        confidence = f"{probability * 100:.2f}%" if result == "Real" else f"{(1 - probability) * 100:.2f}%"
+
+        # Store prediction in history
+        history.appendleft({
+            "text": text,
+            "model": model_name,
+            "prediction": result,
+            "confidence": confidence
+        })
 
 
         return jsonify({"model": model_name, "prediction": result, "confidence": confidence})
@@ -90,6 +98,10 @@ def predict():
     except Exception as e:
         print(f"Prediction Error: {str(e)}")
         return jsonify({"error": "An error occurred during prediction."}), 500
+
+@app.route("/history", methods=["GET"])
+def get_history():
+    return jsonify({"history": list(history)})
 
 if __name__ == "__main__":
     app.run(debug=True)
