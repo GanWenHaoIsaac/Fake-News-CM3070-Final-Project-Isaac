@@ -6,20 +6,20 @@ This code should be run on Python 3.10.13
 Ensure you also use 'npm install' before doing any of the below tasks
 
 How to run both backend and front end applications:
-- Backend:  
-> cd backend
-> python app.py (for running with the frontend application OR "python flask_test_app" for backend only)
-> open 'http://127.0.0.1:5000' on your browser
+> Backend:  
+- cd backend
+- python app.py (for running with the frontend application OR "python flask_test_app" for backend only)
+- open 'http://127.0.0.1:5000' on your browser
 
-- Frontend: 
+> Frontend: 
 1. open a new terminal 
 - npm run dev
 - open 'http://localhost:5173/' on your browser
 
 
-- How to run backend tests:
-> cd backend
-> pytest tests/test-app.py
+> How to run backend tests:
+- cd backend
+- pytest tests/test-app.py
 
-- How to run frontend tests:
-> npm test
+> How to run frontend tests:
+- npm test
