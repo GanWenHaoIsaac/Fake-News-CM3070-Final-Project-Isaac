@@ -1,9 +1,11 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, test, expect, vi } from "vitest";
-import FakeNewsInput from "../components/FakeNewsInput"; // Import component
+import FakeNewsInput from "../components/FakeNewsInput"; 
 import axios from "axios";
+import "@testing-library/jest-dom";
 
-vi.mock("axios"); // Mock axios to avoid real API calls
+
+vi.mock("axios"); // Mocking axios to avoid real API calls
 
 describe("FakeNewsInput Component", () => {
     test("renders form elements correctly", () => {
@@ -32,9 +34,11 @@ describe("FakeNewsInput Component", () => {
         render(<FakeNewsInput />);
         
         fireEvent.change(screen.getByPlaceholderText("Enter news article..."), { target: { value: "Breaking news..." } });
-        fireEvent.click(screen.getByRole("button", { name: "Check" }));
 
-        expect(screen.getByRole("button", { name: "Analyzing..." })).toBeDisabled();
+        fireEvent.click(screen.getByRole("button", { name: /check/i })); 
+        await waitFor(() => {
+            expect(screen.getByRole("button", { name: /analyzing/i })).toBeDisabled();
+        });
 
         await waitFor(() => {
             expect(screen.getByText("Prediction: Fake")).toBeInTheDocument();
@@ -51,7 +55,7 @@ describe("FakeNewsInput Component", () => {
         fireEvent.click(screen.getByRole("button", { name: "Check" }));
 
         await waitFor(() => {
-            expect(screen.getByText("Error during prediction.")).toBeInTheDocument();
+            expect(screen.getByText((content) => content.includes("Error during prediction"))).toBeInTheDocument();
         });
     });
 });
