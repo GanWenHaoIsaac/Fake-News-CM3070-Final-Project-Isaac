@@ -215,7 +215,7 @@ def test_predict_post_decision_tree(mock_load, mock_keras_load):
     client = app.test_client()
     response = client.post('/predict', json={'text': 'Fake news example', 'model': 'dt'})
     
-    assert response.status_code == 20
+    assert response.status_code == 200
     response_json = json.loads(response.data.decode())
 
     assert response_json['prediction'] == 'Fake'
