@@ -13,8 +13,8 @@ How to run both backend and front end applications:
 
 - Frontend: 
 1. open a new terminal 
-> npm run dev
-> open 'http://localhost:5173/' on your browser
+- npm run dev
+- open 'http://localhost:5173/' on your browser
 
 
 - How to run backend tests:
