@@ -26,7 +26,8 @@ models = {
     "lstm": load_model("models/lstm_fixed.keras", compile=False),
     "cnn-lstm": load_model("models/cnn_lstm_fixed.keras", compile=False),
     "bert": load_model("models/bert_redo.keras", custom_objects={'TFBertForSequenceClassification': TFBertForSequenceClassification}, compile=False),
-    "bert-lstm": load_model("models/bert_LSTM_test_99.keras", custom_objects={'TFBertModel': TFBertModel}, compile=False)
+    "bert-lstm": load_model("models/bert_LSTM_test_99.keras", custom_objects={'TFBertModel': TFBertModel}, compile=False),
+    "bigru": load_model("models/bigru_fake_news_redo.keras", compile=False)
 }
 
 def bert_predict(text, model):
@@ -40,6 +41,10 @@ def bert_predict(text, model):
         print(f"BERT Prediction Error: {str(e)}")
         return None
 
+@app.route("/", methods=["GET", "POST"])
+def home():
+    return predict()
+
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
     if request.method == "GET":
@@ -51,7 +56,7 @@ def predict():
         model_name = data.get("model", "lr").lower()
 
         if not text:
-            return jsonify({"error": "No text provided."}), 400
+            return jsonify({"error": "No text provided."}), 200
 
         if model_name not in models:
             return jsonify({"error": "Invalid model selected."}), 400
@@ -62,16 +67,23 @@ def predict():
             sequence = lstm_tokenizer.texts_to_sequences([text])
             padded_sequence = pad_sequences(sequence, maxlen=200, padding='post', truncating='post')
             probability = model.predict(padded_sequence)[0][0]
+
         elif model_name in ["bert", "bert-lstm"]:
             probability = bert_predict(text, model)
             if probability is None:
                 return jsonify({"error": "BERT model prediction failed."}), 500
+            
         else:  # Traditional ML models
-            text_vector = tfidf_vectorizer.transform([text])
-            probability = max(model.predict_proba(text_vector)[0])
+            text_vector = tfidf_vectorizer.transform([text])         
+            probability = model.predict_proba(text_vector)[0][1]
 
         result = "Real" if probability >= 0.5 else "Fake"
-        confidence = f"{probability * 100:.2f}%"
+        #confidence = f"{probability * 100:.2f}%"
+        if result == "Fake":
+            confidence = f"{(1 - probability) * 100:.2f}%"
+        else:
+            confidence = f"{probability * 100:.2f}%"
+
 
         return jsonify({"model": model_name, "prediction": result, "confidence": confidence})
     

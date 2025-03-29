@@ -38,6 +38,7 @@ const FakeNewsInput = () => {
                 <textarea
                     className="w-full p-2 border rounded-md"
                     rows="5"
+                    cols="50"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder="Enter news article..."
