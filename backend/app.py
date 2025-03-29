@@ -28,10 +28,10 @@ models = {
     "cnn-lstm": load_model("models/cnn_lstm_fixed.keras", compile=False),
     "bert": load_model("models/bert_redo.keras", custom_objects={'TFBertForSequenceClassification': TFBertForSequenceClassification}, compile=False),
     "bert-lstm": load_model("models/bert_LSTM_test_99.keras", custom_objects={'TFBertModel': TFBertModel}, compile=False),
-    "bigru": load_model("models/bigru_fake_news_redo.keras", compile=False)
+    "bigru": load_model("models/bigru_redo.keras", compile=False)
 }
 
-# Store last 5 predictions
+# Store last 5 predictions in history
 history = deque(maxlen=5)
 
 def bert_predict(text, model):
@@ -39,7 +39,7 @@ def bert_predict(text, model):
         inputs = bert_tokenizer(text, return_tensors="tf", max_length=256, padding='max_length', truncation=True, return_token_type_ids=False)
         outputs = model(inputs)
         logits = outputs.logits.numpy()[0][0] if hasattr(outputs, 'logits') else outputs.numpy()[0][0]
-        probability = 1 / (1 + np.exp(-logits))  # Apply sigmoid
+        probability = 1 / (1 + np.exp(-logits))  # Applied sigmoid
         return probability
     except Exception as e:
         print(f"BERT Prediction Error: {str(e)}")
@@ -65,7 +65,7 @@ def predict():
         if model_name not in models:
             return jsonify({"error": "Invalid model selected."}), 400
 
-        # Prediction logic
+        # Prediction logic - Deep Learning Models
         model = models[model_name]
         if model_name in ["lstm", "cnn-lstm"]:
             sequence = lstm_tokenizer.texts_to_sequences([text])

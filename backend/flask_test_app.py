@@ -43,7 +43,7 @@ BERT_LSTM = load_model("models/bert_LSTM_test_99.keras",
                         custom_objects={'TFBertModel': TFBertModel},
                         compile=False)
 
-BIGRU = load_model("models/bigru_fake_news_redo.keras", compile=False)
+BIGRU = load_model("models/bigru_redo.keras", compile=False)
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"], methods=["POST"], allow_headers=["Content-Type"])
@@ -69,7 +69,7 @@ def bert_predict(text, model):
         # Handle different output formats
         if hasattr(outputs, 'logits'):  # Standard BERT output
             logits = outputs.logits.numpy()[0][0]
-        elif isinstance(outputs, (np.ndarray, tf.Tensor)):  # Some custom models
+        elif isinstance(outputs, (np.ndarray, tf.Tensor)):
             logits = outputs[0][0] if isinstance(outputs, np.ndarray) else outputs.numpy()[0][0]
         else:
             raise ValueError("Unexpected model output format")
@@ -212,7 +212,7 @@ def predict():
         
         else:
             text = request.form.get("text", "")
-            model_name = request.form.get("model", "lr")  # Default to Logistic Regression
+            model_name = request.form.get("model", "lr") 
 
         if not text:
             return render_template_string(HTML_FORM, 
@@ -220,15 +220,10 @@ def predict():
                                           model_name=model_name, 
                                           prediction="Please enter text.")
 
-        
-        # time.sleep(0.5)
-        # raw_pred = None
-        # result = ""
-        # confidence = "0%"
 
         # Deep learning models (LSTM/CNN-LSTM)
         if model_name in ["lstm", "cnn-lstm", "bigru"]:
-            print(f"\nProcessing with {model_name.upper()} model...")  # Debug
+            print(f"\nProcessing with {model_name.upper()} model...") 
             sequence = lstm_tokenizer.texts_to_sequences([text])
             if not sequence or not sequence[0]:
                 print("Empty sequence after tokenization!")
@@ -252,15 +247,11 @@ def predict():
                 return render_template_string(HTML_FORM, text=text, model_name=model_name, prediction="Error: Invalid model name")
                 
                 
-            print(f"Raw model output: {raw_pred}")  # Debug
+            print(f"Raw model output: {raw_pred}")  
                 
             # Extract and validate prediction
             prediction = raw_pred[0][0]
-            print(f"Final prediction value: {prediction}")  # Debug
-                
-            # if not (0 <= prediction <= 1):
-            #     raise ValueError(f"Prediction {prediction} out of [0,1] range")
-            
+            print(f"Final prediction value: {prediction}")            
             result = "Fake" if prediction < 0.5 else "Real"
             confidence = f"{max(prediction, 1-prediction)*100:.2f}%"
 
@@ -270,16 +261,7 @@ def predict():
             try:
 
                 tf.keras.backend.clear_session()
-                # if model_name == "bert":
-                #     outputs = BERT(inputs)
-                # else:  # bert-lstm
-                #     outputs = BERT_LSTM(inputs)
                 model = BERT if model_name == "bert" else BERT_LSTM
-
-                # Convert logits to probability
-                #logits = outputs.logits.numpy()[0][0]
-                #probability = 1 / (1 + np.exp(-logits))  # Sigmoid
- 
                 probability = bert_predict(text, model)
                 # Determine result and confidence
                 if probability < 0.5:
@@ -319,9 +301,6 @@ def predict():
             proba = model.predict_proba(text_vector)[0]
             confidence = max(proba) * 100
             result = "Fake" if prediction == 0 else "Real"
-            # print(f"Model: {model}")
-            # print(f"Prediction (Flask): {prediction}")
-
         
         if isinstance(confidence, float):
             confidence_str = f"{confidence:.2f}%"

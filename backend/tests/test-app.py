@@ -10,14 +10,12 @@ import json
 import numpy as np
 import time
 
-# basic test
 def test_homepage():
     client = app.test_client()
     response = client.get('/')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data["message"] == "Use POST with JSON data to get a prediction."
-    #assert b'<form' in response.data 
 
 
 def test_predict_get():
@@ -30,8 +28,6 @@ def test_predict_get():
 def test_predict_post_empty():
     client = app.test_client()
     response = client.post('/predict', json={'text': '', 'model': 'lr'})
-    # assert response.status_code == 200
-    # assert b'Please enter text' in response.data
     assert response.status_code == 200
     data = json.loads(response.data)
     assert "error" in data
@@ -151,20 +147,6 @@ def test_model_selection_persistence():
     assert response.status_code == 200
     assert data["model"] == "bert"
 
-# @patch('app.joblib.load', side_effect=Exception("Model failed"))
-# def test_model_failure_handling(mock_predict):
-#     client = app.test_client()
-    
-#     # Simulate a failure during prediction
-#     response = client.post('/predict', json={
-#         'text': 'test',
-#         'model': 'lr'
-#     })
-    
-#     assert response.status_code == 400
-#     assert b'error' in response.data  
-#     assert b'Model failed' in response.data  
-
 def test_invalid_model_handling():
     client = app.test_client()
     response = client.post('/predict', json={
@@ -174,19 +156,13 @@ def test_invalid_model_handling():
     assert b'Invalid model selected' in response.data
 
 
-
-# @patch('app.tfidf_vectorizer.transform')
-# @patch('app.LR', new_callable=MagicMock)
 @patch('app.joblib.load')
 @patch('app.load_model')
 def test_predict_post_logistic(mock_load, mock_keras_load):
     client = app.test_client()
     response = client.post('/predict', json={'text': 'Head of a conservative Republican faction in the U.S. Congress urged budget restraint in 2019', 'model': 'lr'})
     assert response.status_code == 200
-    ##assert b'Prediction: Fake' in response.data
     response_json = json.loads(response.data.decode())
-
-    # Check the content of the response
     assert response_json['prediction'] == 'Real'
     assert response_json['model'] == 'lr'
 
@@ -211,18 +187,10 @@ def test_predict_post_naive_bayes(mock_load, mock_keras_load):
 @patch('app.joblib.load')
 @patch('app.load_model')
 def test_predict_post_svm(mock_load, mock_keras_load):
-    # mock_load.return_value.predict.return_value = [0]  
-    # mock_load.predict_proba.return_value = [[0.99, 0.01]]  
-
     client = app.test_client()
-    response = client.post('/predict', json={'text': 'Fake news example', 'model': 'svm'})
-    
+    response = client.post('/predict', json={'text': 'Fake news example', 'model': 'svm'})   
     assert response.status_code == 200
-    #assert b'Prediction: Fake' in response.data
-
     response_json = json.loads(response.data.decode())
-
-    # Check the content of the response
     assert response_json['prediction'] == 'Fake'
     assert response_json['model'] == 'svm'
 
@@ -236,12 +204,10 @@ def test_predict_post_random_forest(mock_load, mock_keras_load):
     assert response.status_code == 200
     response_json = json.loads(response.data.decode())
 
-    # Check the content of the response
     assert response_json['prediction'] == 'Fake'
     assert response_json['model'] == 'rf'
 
-# @patch('app.tfidf_vectorizer.transform')
-# @patch('app.DT', new_callable=MagicMock)
+
 @patch('app.joblib.load')
 @patch('app.load_model')
 def test_predict_post_decision_tree(mock_load, mock_keras_load):
@@ -249,13 +215,9 @@ def test_predict_post_decision_tree(mock_load, mock_keras_load):
     client = app.test_client()
     response = client.post('/predict', json={'text': 'Fake news example', 'model': 'dt'})
     
-    assert response.status_code == 200
-    # assert b'Prediction: Fake' in response.data
-    # assert b'Confidence: 95.00%' in response.data
-
+    assert response.status_code == 20
     response_json = json.loads(response.data.decode())
 
-    # Check the content of the response
     assert response_json['prediction'] == 'Fake'
     assert response_json['model'] == 'dt'
 
@@ -270,7 +232,7 @@ def test_lstm_models(mock_texts_to_sequences, mock_load_model, model_name):
     text = "This is a sample fake news article to test the model."
     input_data = mock_texts_to_sequences([text])
     
-    mock_model.predict.return_value = np.array([[0.7]])  # Mock probability output
+    mock_model.predict.return_value = np.array([[0.7]]) 
     probability = mock_model.predict(input_data)[0][0]
     
     assert 0 <= probability <= 1, f"{model_name} produced an invalid probability: {probability}"
@@ -286,7 +248,7 @@ def test_lstm_models(mock_texts_to_sequences, mock_load_model, model_name):
 @patch('app.bert_predict')
 def test_predict_post_bert(mock_bert_predict):
 
-    mock_bert_predict.return_value = 0.15  # Fake news, 85% confidence
+    mock_bert_predict.return_value = 0.15  
 
     client = app.test_client()
     response = client.post('/predict', json={'text': 'This is fake', 'model': 'bert'})
@@ -296,21 +258,18 @@ def test_predict_post_bert(mock_bert_predict):
     assert response.status_code == 200
     response_json = json.loads(response.data.decode())
 
-    # Check the content of the response
     assert response_json['prediction'] == 'Fake'
     assert response_json['confidence'] == '85.00%'
     assert response_json['model'] == 'bert'
 
 @patch('app.bert_predict')
 def test_predict_post_bert_lstm(mock_bert_predict):
-    mock_bert_predict.return_value = 0.65  # 65% probability (Real)
+    mock_bert_predict.return_value = 0.65 
     
     client = app.test_client()
     response = client.post('/predict', json={'text': 'Real news example', 'model': 'bert-lstm'})
     
     assert response.status_code == 200
-    # assert b'Prediction: Real' in response.data
-    # assert b'Confidence: 65.00%' in response.data
     response_json = json.loads(response.data.decode())
 
     # Check the content of the response
