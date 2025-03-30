@@ -1,7 +1,7 @@
-# Ensure this system is ran in accordance with the Virtual Environments settings listed in the .env file and requirements.txt
-This code should be run on Python 3.10.13
+# Ensure this system is ran in accordance with the Conda Virtual Environments settings listed in the .env file and requirements.txt for both CPU and GPU devices
+This code should be run on Python 3.10.13, with the installations from "requirementsCPU.txt" ot
 
-## The main branch version of this assignment is incomplete, please use the one in the 'master' branch instead. Additionally, use "git lfs pull" then git clone this repository to ensure the BERT models load correctly. The report will link a Google Drive to this project if the methods above do not work.
+## The 'main' branch version of this assignment is incomplete, please use the one in the 'master' branch instead. Additionally, use "git lfs pull" then git clone this repository to ensure the BERT models load correctly. Download the ZIP will causes those models to not load. The report will link a Google Drive to this project if the methods above do not work.
 
 Ensure you also use 'npm install' before doing any of the below tasks
 
