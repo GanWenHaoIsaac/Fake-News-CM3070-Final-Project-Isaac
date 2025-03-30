@@ -23,10 +23,10 @@ LR = joblib.load("models/logistic_regression_comp_4.pkl")
 NB = joblib.load("models/naive_bayes_comp_4.pkl")
 RF = joblib.load("models/random_forest_comp_2.pkl")
 SVM = joblib.load("models/svm_model_comp_1.pkl")
-DT = joblib.load("models/decision_tree.pkl")
+DT = joblib.load("models/example_decision_tree.pkl")
 
 
-from transformers import BertTokenizer, TFBertModel, TFBertForSequenceClassification
+from transformers import TFBertModel, TFBertForSequenceClassification
 import tensorflow as tf
 from tensorflow.keras.models import load_model, Model
 from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -67,7 +67,7 @@ def bert_predict(text, model):
         outputs = model(inputs)
         
         # Handle different output formats
-        if hasattr(outputs, 'logits'):  # Standard BERT output
+        if hasattr(outputs, 'logits'): 
             logits = outputs.logits.numpy()[0][0]
         elif isinstance(outputs, (np.ndarray, tf.Tensor)):
             logits = outputs[0][0] if isinstance(outputs, np.ndarray) else outputs.numpy()[0][0]

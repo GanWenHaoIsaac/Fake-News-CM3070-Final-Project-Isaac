@@ -1,0 +1,2 @@
+Move the notebooks to the "models" folder if you want to run them.
+Jupyter Notebook files are kept here for organization purposes

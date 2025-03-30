@@ -179,7 +179,6 @@ def test_predict_post_naive_bayes(mock_load, mock_keras_load):
     assert response.status_code == 200
     response_json = json.loads(response.data.decode())
 
-    # Check the content of the response
     assert response_json['prediction'] == 'Real'
     assert response_json['model'] == 'nb'
 

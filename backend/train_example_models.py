@@ -64,16 +64,16 @@ X_train_tfidf = tfidf.fit_transform(x_train)
 X_test_tfidf = tfidf.transform(x_test)
 
 # Train Logistic Regression model
-# LR = LogisticRegression(random_state=42)
-# LR.fit(X_train_tfidf, y_train)
+LR = LogisticRegression(random_state=42)
+LR.fit(X_train_tfidf, y_train)
 
-# # Evaluate model
-# lr_pred = LR.predict(X_test_tfidf)
-# LR.score(X_test_tfidf, y_test)
-# print("LR model:")
-# print(classification_report(y_test, lr_pred))
-# accuracy = accuracy_score(y_test, y_pred)
-# print(f"Model Accuracy: {accuracy:.4f}")
+# Evaluate model
+lr_pred = LR.predict(X_test_tfidf)
+LR.score(X_test_tfidf, y_test)
+print("LR model:")
+print(classification_report(y_test, lr_pred))
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Model Accuracy: {accuracy:.4f}")
 
 # Save the model and vectorizer
 DT = DecisionTreeClassifier(random_state=42)
@@ -86,22 +86,22 @@ print("DT: ", classification_report(y_test, dt_pred))
 
 
 # Train Random Forest model
-# rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
-# rf_model.fit(X_train_tfidf, y_train)
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train_tfidf, y_train)
 
-# # Evaluate Random Forest model
-# rf_pred = rf_model.predict(X_test_tfidf)
-# print("Random Forest Classification Report:")
-# print(classification_report(y_test, rf_pred))
+# Evaluate Random Forest model
+rf_pred = rf_model.predict(X_test_tfidf)
+print("Random Forest Classification Report:")
+print(classification_report(y_test, rf_pred))
 
-# Train SVM model
-# svm_model = SVC(kernel='linear', random_state=42)
-# svm_model.fit(X_train_tfidf, y_train)
+#Train SVM model
+svm_model = SVC(kernel='linear', random_state=42)
+svm_model.fit(X_train_tfidf, y_train)
 
-# # Evaluate SVM model
-# svm_pred = svm_model.predict(X_test_tfidf)
-# print("SVM Classification Report:")
-# print(classification_report(y_test, svm_pred))
+# Evaluate SVM model
+svm_pred = svm_model.predict(X_test_tfidf)
+print("SVM Classification Report:")
+print(classification_report(y_test, svm_pred))
 
 
 def output_label(n):
@@ -117,15 +117,15 @@ def manual_testing(news):
     new_x_test = new_def_test["text"]
     new_xv_test = tfidf.transform(new_x_test)
     
-    #lr_pred = LR.predict(new_xv_test)
+    lr_pred = LR.predict(new_xv_test)
     dt_pred = DT.predict(new_xv_test)
-    # rf_pred = rf_model.predict(new_xv_test)
-    # svm_pred = svm_model.predict(new_xv_test)
+    rf_pred = rf_model.predict(new_xv_test)
+    svm_pred = svm_model.predict(new_xv_test)
 
-    #print(f"\n\nLR Prediction: {output_label(lr_pred[0])}")
+    print(f"\n\nLR Prediction: {output_label(lr_pred[0])}")
     print(f"DT Prediction: {output_label(dt_pred[0])}")
-    # print(f"RF Prediction: {output_label(rf_pred[0])}")
-    # print(f"SVM Prediction: {output_label(svm_pred[0])}")
+    print(f"RF Prediction: {output_label(rf_pred[0])}")
+    print(f"SVM Prediction: {output_label(svm_pred[0])}")
 
 
 news = str("Head of a conservative Republican faction in the U.S. Congress urged budget restraint in 2019")
@@ -135,23 +135,23 @@ manual_testing(news)
 import os
 os.makedirs("models", exist_ok=True)
 
-# print("Saving model to models/logistic_regression.pkl...")
-# joblib.dump(LR, "models/logistic_regression.pkl")
-# print("LR model saved successfully.")
+print("Saving model to models/logistic_regression.pkl...")
+joblib.dump(LR, "models/example_logistic_regression.pkl")
+print("LR model saved successfully.")
 
 print("Saving vectorizer to models/decision_tree.pkl...")
-joblib.dump(DT, "models/decision_tree.pkl")
+joblib.dump(DT, "models/example_decision_tree.pkl")
 print("DT model saved successfully.")
 
-# print("Saving model to models/logistic_regression.pkl...")
-# joblib.dump(rf_model, "models/random_forest.pkl")
-# print("LR model saved successfully.")
+print("Saving model to models/logistic_regression.pkl...")
+joblib.dump(rf_model, "models/example_random_forest.pkl")
+print("LR model saved successfully.")
 
-# print("Saving vectorizer to models/decision_tree.pkl...")
-# joblib.dump(svm_model, "models/svm_model.pkl")
-# print("DT model saved successfully.")
+print("Saving vectorizer to models/decision_tree.pkl...")
+joblib.dump(svm_model, "models/example_svm_model.pkl")
+print("DT model saved successfully.")
 
-# print("Saving TF-IDF vectorizer to models/tfidf_vectorizer.pkl...")
-# joblib.dump(tfidf, "models/tfidf_vectorizer_10k.pkl")
-# print("TF-IDF vectorizer saved successfully.")
+print("Saving TF-IDF vectorizer to models/tfidf_vectorizer.pkl...")
+joblib.dump(tfidf, "models/example_tfidf_vectorizer.pkl")
+print("TF-IDF vectorizer saved successfully.")
 

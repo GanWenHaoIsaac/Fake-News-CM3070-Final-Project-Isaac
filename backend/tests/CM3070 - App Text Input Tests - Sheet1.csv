@@ -1,0 +1,128 @@
+,Real News,,,,
+,Paraphrased News From Dataset,,Direct News from Dataset,,News articles found from 2016-2017
+Text Inputs,Head of a conservative Republican faction in the U.S. Congress urged budget restraint in 2019,"Kim Jong Un sent a rare congratulatory message to Chinese President Xi Jinping on Wednesday at the end of China’s Communist Party Congress, wishing him 'great success' as head of the nation, the North’s state media said.","WASHINGTON (Reuters) - Aides to President-elect Donald Trump are considering Republican Representative Jeb Hensarling of Texas as a candidate for Treasury secretary, the Wall Street Journal reported on Thursday, citing people familiar with the matter.","SINGAPORE (Reuters) - An earthquake of magnitude 6.2 struck off the Pacific Ocean nation of Papua New Guinea on Monday, the U.S. Geological Survey said.",Singapore celebrated 50 years of independence. The country with a population of just over 5 million defied the odds by becoming one of the wealthiest countries in the world.
+Logistic Regression,"Real,
+Confidence: 66.68%","Real, 
+Confidence: 84.78%","Real
+Confidence: 97.55%","Real
+Confidence: 95.55%","Fake
+Confidence: 57.53%"
+Decision Tree (baseline model),"Fake, 
+Confidence: 100%","Fake, 
+Confidence: 100%","Fake
+Confidence: 100.00%","Fake
+Confidence: 100.00%","Fake
+Confidence: 100.00%"
+SVM,"Real, 
+Confidence: 75.01%","Real, 
+Confidence: 98.39%","Real
+Confidence: 100.00%","Real
+Confidence: 100.00%","Real
+Confidence: 51.29%"
+Naive Bayes,"Real, 
+Confidence: 89.78%","Real, 
+Confidence: 99.76%","Real
+Confidence: 98.91%","Real
+Confidence: 98.76%","Real
+Confidence: 91.55%"
+Random Forest,"Fake, 
+Confidence: 86.00%","Real, 
+Confidence: 58.00%","Real
+Confidence: 97.00%","Real
+Confidence: 88.00%","Fake
+Confidence: 74.00%"
+LSTM,"Real, 
+Confidence: 86.5%","Real, 
+Confidence: 98.64%","Real
+Confidence: 99.99%","Real
+Confidence: 99.99%","Fake
+Confidence: 99.47%"
+CNN-LSTM,"Real
+Confidence: 80.69%","Real
+Confidence: 97.96%","Real
+Confidence: 99.49%","Real
+Confidence: 99.90%
+","Fake
+Confidence: 96.63%"
+BERT,"Real, 
+Confidence: 72.99%","Real, 
+Confidence: 73.05%","Real
+Confidence: 72.93%","Real
+Confidence: 72.93%","Real
+Confidence: 73.03%"
+BERT-LSTM,"Real, 
+Confidence: 52.82%","Real, 
+Confidence: 56.36%","Real
+Confidence: 59.57%","Real
+Confidence: 59.57%","Real
+Confidence: 66.60%"
+BiGRU,"Real
+Confidence: 96.57%","Fake
+Confidence: 99.99%"," Real
+Confidence: 100.00%","Real
+Confidence: 100.00%","Fake
+Confidence: 100.00%"
+,,,,,
+,Fake News,,,,
+,Paraphrased News From Dataset,,Direct News from Dataset,,News articles found from 2016-2017 not found in dataset
+Text Inputs,congressional Republicans went after healthcare for low-income kids and loans for low-income students,Fans of DC Comics Suicide Squad started a petition to shut down review aggregator Rotten Tomatoes after the site collected negative reviews of the latest superhero film,21st Century Wire says US Defense Secretary Ash Carter is the latest Washington  defense  insider to suffer from that common American condition known as Strangelove Syndrome,"Arizona Republican Senator Jeff Flake has never been a fan of Donald Trump or his incendiary, divisive brand of politics. Now, he is a leading GOP voice against electing Roy Moore (R-AL) to the United States Senate.","RuPaul claims Trump touched him inappropriately in the 90s. After tapes surfaced of Donald Trump and broadcaster Billy Bush making obscene comments about women, so did this satirical story about the President-elect fondling one of America’s most famous drag queens."
+Logistic Regression,"Fake
+Confidence: 87.24%","Fake
+Confidence: 92.84%","Fake
+Confidence: 97.68%","Fake
+Confidence: 84.45%","Fake
+Confidence: 92.76%"
+Decision Tree (baseline model),"Fake
+Confidence: 100.00%","Fake
+Confidence: 100.00%","Fake
+Confidence: 100.00%","Fake
+Confidence: 100.00%","Fake
+Confidence: 100.00%"
+SVM,"Fake
+Confidence: 98.98%","Fake
+Confidence: 99.70%","Fake
+Confidence: 99.99%","Fake
+Confidence: 99.61%","Fake
+Confidence: 99.73%"
+Naive Bayes,"Fake
+Confidence: 54.94%","Fake
+Confidence: 92.91%","Fake
+Confidence: 93.97%","Fake
+Confidence: 81.12%","Fake
+Confidence: 75.24%"
+Random Forest,"Fake
+Confidence: 95.00%","Fake
+Confidence: 94.00%","Fake
+Confidence: 92.00%","Fake
+Confidence: 81.00%","Fake
+Confidence: 90.00%"
+LSTM,"Fake
+Confidence: 99.99%","Fake
+Confidence: 95.91%","Fake
+Confidence: 99.96%","Fake
+Confidence: 99.11%","Fake
+Confidence: 89.11%"
+CNN-LSTM,"Fake
+Confidence: 99.33%","Fake
+Confidence: 99.74%","Fake
+Confidence: 99.97%","Fake
+Confidence: 99.97%","Fake
+Confidence: 99.31%"
+BERT,"Real
+Confidence: 72.90%","Real
+Confidence: 72.99%","Real
+Confidence: 73.04%","Real
+Confidence: 73.04%","Real
+Confidence: 73.01%"
+BERT-LSTM,"Real
+Confidence: 57.74%","Real
+Confidence: 52.74%","Real
+Confidence: 52.05%","Real
+Confidence: 53.01%","Real
+Confidence: 68.37%"
+BiGRU,"Fake
+Confidence: 100.00%","Fake
+Confidence: 100.00%","Fake
+Confidence: 100.00%","Fake
+Confidence: 100.00%","Fake
+Confidence: 100.00%"
