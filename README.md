@@ -14,7 +14,7 @@ How to run both backend and front end applications:
 - open 'http://127.0.0.1:5000' on your browser
 
 > Frontend: 
-1. open a new terminal 
+1. open a new terminal after running app.py
 - npm run dev
 - open 'http://localhost:5173/' on your browser
 
