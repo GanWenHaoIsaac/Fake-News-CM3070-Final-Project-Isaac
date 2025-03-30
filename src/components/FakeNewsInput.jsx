@@ -9,22 +9,28 @@ const FakeNewsInput = () => {
     const [confidence, setConfidence] = useState(null);
     const [history, setHistory] = useState([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar state
-    const models = ["lr", "dt", "svm", "nb", "rf", "lstm", "cnn-lstm", "bert", "bert-lstm"];
+    const models = ["lr", "dt", "svm", "nb", "rf", "lstm", "cnn-lstm", "bert", "bert-lstm", "bigru"];
 
     const fakeExamples = [
-        "Shocking! Scientists confirm the earth is flat!",
-        "Exclusive: Secret government agency controls all world leaders.",
-        "New study reveals drinking soda makes you immune to diseases.",
-        "Alien spaceship spotted near the White House!",
-        "You won’t believe this miracle cure for aging!"
+        //These 2 sentences are shorten versions of articles directly from the 'fake' dataset
+        "congressional Republicans went after healthcare for low-income kids and loans for low-income students",
+        "Fans of DC Comics Suicide Squad started a petition to shut down review aggregator Rotten Tomatoes after the site collected negative reviews of the latest superhero film",
+        //These 2 sentences are sentences from articles directly from the 'fake' dataset
+        "21st Century Wire says US Defense Secretary Ash Carter is the latest Washington  defense  insider to suffer from that common American condition known as Strangelove Syndrome",
+        "Arizona Republican Senator Jeff Flake has never been a fan of Donald Trump or his incendiary, divisive brand of politics. Now, he is a leading GOP voice against electing Roy Moore (R-AL) to the United States Senate.",
+        //This sentence is from an actual fake news article: https://www.dailysabah.com/gallery/life/top-10-major-fake-news-stories-of-2017-that-many-people-fell-for?gallery_image=1038602
+        "RuPaul claims Trump touched him inappropriately in the 90s. After tapes surfaced of Donald Trump and broadcaster Billy Bush making obscene comments about women, so did this satirical story about the President-elect fondling one of America’s most famous drag queens."
     ];
 
     const realExamples = [
+        //These 2 sentences are shorten versions of articles directly from the 'true' dataset
         "Head of a conservative Republican faction in the U.S. Congress urged budget restraint in 2019",
-        "Latest update: Scientists discover a new exoplanet.",
-        "Health news: Regular exercise improves mental health.",
-        "Technology: AI is transforming the future of work.",
-        "World news: Climate change policies gain momentum."
+        "Kim Jong Un sent a rare congratulatory message to Chinese President Xi Jinping on Wednesday at the end of China’s Communist Party Congress, wishing him 'great success' as head of the nation, the North’s state media said.",
+        //These 2 sentences are sentences from articles directly from the 'true' dataset
+        "WASHINGTON (Reuters) - Aides to President-elect Donald Trump are considering Republican Representative Jeb Hensarling of Texas as a candidate for Treasury secretary, the Wall Street Journal reported on Thursday, citing people familiar with the matter.",
+        "SINGAPORE (Reuters) - An earthquake of magnitude 6.2 struck off the Pacific Ocean nation of Papua New Guinea on Monday, the U.S. Geological Survey said.",
+        //This sentence is from a real news article: https://www.abc.net.au/news/2015-08-07/singapore-gets-ready-for-its-biggest-party/6669522
+        "Singapore celebrated 50 years of independence. The country with a population of just over 5 million defied the odds by becoming one of the wealthiest countries in the world."
     ];
 
     const MAX_LENGTH = 70; 
@@ -98,6 +104,7 @@ const FakeNewsInput = () => {
                             {sample.length > MAX_LENGTH ? sample.substring(0, MAX_LENGTH) + "........" : sample}
                             </span>
                             <button 
+                                data-testid="copy-button"
                                 onClick={() => handleCopy(sample)}
                                 className="ml-4 bg-gray-400 hover:bg-gray-500 text-black font-semibold py-1 px-2 rounded"
                             >Copy</button>
@@ -113,7 +120,7 @@ const FakeNewsInput = () => {
                             <span className="text-black">
                             {sample.length > MAX_LENGTH ? sample.substring(0, MAX_LENGTH) + "..." : sample}
                             </span>
-                            <button 
+                            <button data-testid="copy-button"
                                 onClick={() => handleCopy(sample)}
                                 className="bg-gray-400 hover:bg-gray-500 text-black font-semibold py-1 px-2 rounded"
                             >

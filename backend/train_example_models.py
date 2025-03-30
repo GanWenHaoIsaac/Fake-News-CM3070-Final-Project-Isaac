@@ -26,18 +26,6 @@ fake_news['label'] = 0  # Fake news = 0
 real_news['label'] = 1  # Real news = 1
 fake_news.shape, real_news.shape
 
-#data = pd.concat([fake_news, real_news], ignore_index=True)
-# fake_manual_testing = fake_news.tail(10)
-# real_manual_testing = real_news.tail(10)
-# for i in range(21416, 21406, -1):
-#     real_news.drop([i], axis = 0, inplace = True)
-# fake_news.reset_index(drop=True, inplace=True)
-# real_news.reset_index(drop=True, inplace=True)
-
-
-# fake_manual_testing['label'] = 0
-# real_manual_testing['label'] = 1
-
 merge_news = pd.concat([fake_news, real_news], axis = 0)
 merge_news.head(10)
 
@@ -49,14 +37,6 @@ stop_words = set(stopwords.words('english'))
 
 nltk.download('wordnet')
 lemmatizer = WordNetLemmatizer()
-
-# def preprocess_text(text):
-#     text = re.sub(r'\W', ' ', text)  # Remove special characters
-#     text = re.sub(r'\d+', ' ', text)  # Remove numbers
-#     text = text.lower()  # Convert to lowercase
-#     text = re.sub(r'\s+', ' ', text)  # Remove extra spaces
-#     text = ' '.join([lemmatizer.lemmatize(word) for word in text.split() if word not in stop_words])  # Lemmatize and remove stopwords
-#     return text
 
 def wordopt(text):
     text = text.lower()
@@ -84,19 +64,19 @@ X_train_tfidf = tfidf.fit_transform(x_train)
 X_test_tfidf = tfidf.transform(x_test)
 
 # Train Logistic Regression model
-LR = LogisticRegression()
-LR.fit(X_train_tfidf, y_train)
+# LR = LogisticRegression(random_state=42)
+# LR.fit(X_train_tfidf, y_train)
 
-# Evaluate model
-lr_pred = LR.predict(X_test_tfidf)
-LR.score(X_test_tfidf, y_test)
-print("LR model:")
-print(classification_report(y_test, lr_pred))
+# # Evaluate model
+# lr_pred = LR.predict(X_test_tfidf)
+# LR.score(X_test_tfidf, y_test)
+# print("LR model:")
+# print(classification_report(y_test, lr_pred))
 # accuracy = accuracy_score(y_test, y_pred)
 # print(f"Model Accuracy: {accuracy:.4f}")
 
 # Save the model and vectorizer
-DT = DecisionTreeClassifier()
+DT = DecisionTreeClassifier(random_state=42)
 DT.fit(X_train_tfidf, y_train)
 
 dt_pred = DT.predict(X_test_tfidf)
@@ -137,12 +117,12 @@ def manual_testing(news):
     new_x_test = new_def_test["text"]
     new_xv_test = tfidf.transform(new_x_test)
     
-    lr_pred = LR.predict(new_xv_test)
+    #lr_pred = LR.predict(new_xv_test)
     dt_pred = DT.predict(new_xv_test)
     # rf_pred = rf_model.predict(new_xv_test)
     # svm_pred = svm_model.predict(new_xv_test)
 
-    print(f"\n\nLR Prediction: {output_label(lr_pred[0])}")
+    #print(f"\n\nLR Prediction: {output_label(lr_pred[0])}")
     print(f"DT Prediction: {output_label(dt_pred[0])}")
     # print(f"RF Prediction: {output_label(rf_pred[0])}")
     # print(f"SVM Prediction: {output_label(svm_pred[0])}")
@@ -155,9 +135,9 @@ manual_testing(news)
 import os
 os.makedirs("models", exist_ok=True)
 
-print("Saving model to models/logistic_regression.pkl...")
-joblib.dump(LR, "models/logistic_regression.pkl")
-print("LR model saved successfully.")
+# print("Saving model to models/logistic_regression.pkl...")
+# joblib.dump(LR, "models/logistic_regression.pkl")
+# print("LR model saved successfully.")
 
 print("Saving vectorizer to models/decision_tree.pkl...")
 joblib.dump(DT, "models/decision_tree.pkl")
@@ -171,7 +151,7 @@ print("DT model saved successfully.")
 # joblib.dump(svm_model, "models/svm_model.pkl")
 # print("DT model saved successfully.")
 
-print("Saving TF-IDF vectorizer to models/tfidf_vectorizer.pkl...")
-joblib.dump(tfidf, "models/tfidf_vectorizer_10k.pkl")
-print("TF-IDF vectorizer saved successfully.")
+# print("Saving TF-IDF vectorizer to models/tfidf_vectorizer.pkl...")
+# joblib.dump(tfidf, "models/tfidf_vectorizer_10k.pkl")
+# print("TF-IDF vectorizer saved successfully.")
 

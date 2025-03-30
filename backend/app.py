@@ -24,8 +24,9 @@ models = {
     "rf": joblib.load("models/random_forest_comp_2.pkl"),
     "svm": joblib.load("models/svm_model_comp_1.pkl"),
     "dt": joblib.load("models/decision_tree.pkl"),
+    
     "lstm": load_model("models/lstm_fixed.keras", compile=False),
-    "cnn-lstm": load_model("models/cnn_lstm_fixed.keras", compile=False),
+    "cnn-lstm": load_model("models/cnn_lstm_FINAL.keras", compile=False),
     "bert": load_model("models/bert_redo.keras", custom_objects={'TFBertForSequenceClassification': TFBertForSequenceClassification}, compile=False),
     "bert-lstm": load_model("models/bert_LSTM_test_99.keras", custom_objects={'TFBertModel': TFBertModel}, compile=False),
     "bigru": load_model("models/bigru_redo.keras", compile=False)
@@ -67,7 +68,7 @@ def predict():
 
         # Prediction logic - Deep Learning Models
         model = models[model_name]
-        if model_name in ["lstm", "cnn-lstm"]:
+        if model_name in ["lstm", "cnn-lstm", "bigru"]:
             sequence = lstm_tokenizer.texts_to_sequences([text])
             padded_sequence = pad_sequences(sequence, maxlen=200, padding='post', truncating='post')
             probability = model.predict(padded_sequence)[0][0]
