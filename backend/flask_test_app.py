@@ -7,11 +7,8 @@ import string
 import shap
 import pickle
 import numpy as np
-# import sys
-# print(sys.executable)  # Should show the conda env path
-# print(sys.path)        # Check if unwanted paths are prioritized#
 
-# Load traditional ML model
+# Load text preprocessing methods
 tfidf_vectorizer = joblib.load("models/preprocessing_methods/tfidf_vectorizer_Notebook.pkl")
 with open('models/preprocessing_methods/LSTMs-tokenizer.pkl', 'rb') as handle:
     lstm_tokenizer = pickle.load(handle)

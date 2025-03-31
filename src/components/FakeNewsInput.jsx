@@ -8,7 +8,7 @@ const FakeNewsInput = () => {
     const [result, setResult] = useState(null);
     const [confidence, setConfidence] = useState(null);
     const [history, setHistory] = useState([]);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar state
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const models = ["lr", "dt", "svm", "nb", "rf", "lstm", "cnn-lstm", "bert", "bert-lstm", "bigru"];
 
     const fakeExamples = [
