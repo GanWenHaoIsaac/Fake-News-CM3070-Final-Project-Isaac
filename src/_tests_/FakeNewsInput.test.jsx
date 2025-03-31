@@ -105,13 +105,13 @@ describe("FakeNewsInput Component", () => {
 
         await waitFor(() => {
             const bertEntries = screen.getAllByText((content) => content.includes("BERT"));
-            expect(bertEntries.length).toBeGreaterThan(0); // Ensure at least one match
+            expect(bertEntries.length).toBeGreaterThan(0); 
     
             const realEntries = screen.getAllByText((content) => content.includes("Real"));
-            expect(realEntries.length).toBeGreaterThan(0); // Expect at least one "Real"
+            expect(realEntries.length).toBeGreaterThan(0); 
     
             const confidenceEntries = screen.getAllByText((content) => content.includes("0.92"));
-            expect(confidenceEntries.length).toBeGreaterThan(0); // Expect at least one confidence score
+            expect(confidenceEntries.length).toBeGreaterThan(0); 
         });
     });
 
